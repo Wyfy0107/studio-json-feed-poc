@@ -24,7 +24,7 @@ Gist page: https://gist.github.com/Wyfy0107/d22ca7e95a2dba74e65350ab111291f5
 
 ### Option B — Your own public Google Sheet (~1 min)
 
-Smartly Drive **blocks** “anyone with the link” and sharing outside `@smartly.io` on the auto-created sheet ([link](https://docs.google.com/spreadsheets/d/1C8_Zb87gUfXXmZn0Gt7dgZLAG9AjWbg1Lii5zvbLXfQ/edit) — only works when signed in as **duy.nguyen@smartly.io**).
+Smartly Drive **blocks** public / personal-Google sharing on the auto-created sheet. The sheet is shared **domain-wide for `@smartly.io`** ([link](https://docs.google.com/spreadsheets/d/1C8_Zb87gUfXXmZn0Gt7dgZLAG9AjWbg1Lii5zvbLXfQ/edit) — open while signed into a Smartly Google account). If you use a personal Gmail, Google shows *“Sorry, the file you have requested does not exist”* even though the file is real.
 
 To get a **public** Sheet:
 
