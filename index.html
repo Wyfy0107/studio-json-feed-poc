@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="ad.size" content="width=300,height=250" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Studio JSON feed POC</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 300px;
+        height: 250px;
+        overflow: hidden;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      #ad {
+        position: relative;
+        width: 300px;
+        height: 250px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 16px;
+      }
+      #ad.theme-dark {
+        background: #1a1a2e;
+        color: #fff;
+      }
+      #ad.theme-light {
+        background: #f5f5f5;
+        color: #222;
+      }
+      #ad.theme-error {
+        background: #3d1515;
+        color: #ffcdd2;
+      }
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: bold;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 4px;
+        margin-bottom: 8px;
+        background: #e65100;
+        color: #fff;
+      }
+      .theme-light .badge {
+        background: #1565c0;
+      }
+      #headline {
+        font-size: 22px;
+        font-weight: bold;
+        line-height: 1.2;
+        margin-bottom: 8px;
+      }
+      #subtitle {
+        font-size: 14px;
+        line-height: 1.3;
+        opacity: 0.9;
+        margin-bottom: 12px;
+      }
+      #cta {
+        display: none;
+        align-self: flex-start;
+        margin-top: auto;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: bold;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .theme-dark #cta {
+        background: #ff6b35;
+        color: #fff;
+      }
+      .theme-light #cta {
+        background: #222;
+        color: #fff;
+      }
+      #cta.visible {
+        display: inline-block;
+      }
+      #debug {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        font-size: 9px;
+        line-height: 1.2;
+        padding: 4px 6px;
+        background: rgba(0, 0, 0, 0.75);
+        color: #8f8;
+        max-height: 48px;
+        overflow: hidden;
+        word-break: break-all;
+      }
+      .layout-minimal #headline {
+        font-size: 18px;
+        text-align: center;
+        margin: auto 0;
+      }
+      .layout-hero #headline {
+        font-size: 26px;
+      }
+    </style>
+    <script type="text/javascript">
+      var Enabler = window.Enabler || {
+        isInitialized: function () {
+          return false;
+        },
+        addEventListener: function (event, fn) {
+          if (event === 'init') {
+            setTimeout(fn, 0);
+          }
+        },
+        exit: function () {},
+        setProfileId: function () {},
+        setDevDynamicContent: function () {}
+      };
+    </script>
+    <script src="https://s0.2mdn.net/ads/studio/Enabler.js"></script>
+  </head>
+  <body>
+    <div id="ad" class="theme-light layout-minimal">
+      <span id="badge" class="badge" style="display: none"></span>
+      <h1 id="headline">Loading…</h1>
+      <p id="subtitle" style="display: none"></p>
+      <button type="button" id="cta">Click</button>
+      <div id="debug"></div>
+    </div>
+
+    <script type="text/javascript">
+      /** Set false before production upload if you do not want the debug strip. */
+      var SHOW_DEBUG = true;
+
+      /**
+       * Must match the Studio element name for your dynamic feed.
+       * Default matches CM360/Raptor "Dynamic_Feed"; replace after Generate Code if different.
+       */
+      var DYNAMIC_ELEMENT_NAME = 'Dynamic_Feed';
+      var LAYOUT_JSON_FIELD = 'LayoutJson';
+
+      Enabler.setProfileId(0);
+      var devDynamicContent = {};
+      devDynamicContent[DYNAMIC_ELEMENT_NAME] = [{}];
+      devDynamicContent[DYNAMIC_ELEMENT_NAME][0]._id = 0;
+      devDynamicContent[DYNAMIC_ELEMENT_NAME][0].LayoutJson =
+        '{"layout":"hero","headline":"Dev preview headline","subtitle":"From devDynamicContent","theme":"dark","showCta":true,"ctaText":"Dev CTA"}';
+      Enabler.setDevDynamicContent(devDynamicContent);
+
+      function getDynamicRow() {
+        var element = dynamicContent[DYNAMIC_ELEMENT_NAME];
+        if (!element || !element.length) {
+          return null;
+        }
+        return element[0];
+      }
+
+      function parseLayoutJson(raw) {
+        if (raw === null || raw === undefined || raw === '') {
+          return { layout: 'error', message: 'LayoutJson is empty' };
+        }
+        var str = typeof raw === 'string' ? raw : String(raw);
+        try {
+          var parsed = JSON.parse(str.trim());
+          if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+            return { layout: 'error', message: 'LayoutJson must be a JSON object' };
+          }
+          return parsed;
+        } catch (e) {
+          return { layout: 'error', message: 'JSON parse failed: ' + e.message };
+        }
+      }
+
+      function setTheme(adEl, theme) {
+        adEl.classList.remove('theme-dark', 'theme-light', 'theme-error');
+        if (theme === 'dark') {
+          adEl.classList.add('theme-dark');
+        } else if (theme === 'error') {
+          adEl.classList.add('theme-error');
+        } else {
+          adEl.classList.add('theme-light');
+        }
+      }
+
+      function setLayoutClass(adEl, layout) {
+        adEl.classList.remove('layout-hero', 'layout-promo', 'layout-minimal', 'layout-error');
+        adEl.classList.add('layout-' + (layout || 'minimal'));
+      }
+
+      function render(payload) {
+        var adEl = document.getElementById('ad');
+        var badgeEl = document.getElementById('badge');
+        var headlineEl = document.getElementById('headline');
+        var subtitleEl = document.getElementById('subtitle');
+        var ctaEl = document.getElementById('cta');
+        var debugEl = document.getElementById('debug');
+
+        var layout = payload.layout || 'minimal';
+        setLayoutClass(adEl, layout);
+        setTheme(adEl, payload.layout === 'error' ? 'error' : payload.theme || 'light');
+
+        badgeEl.style.display = 'none';
+        subtitleEl.style.display = 'none';
+        ctaEl.classList.remove('visible');
+
+        if (layout === 'error') {
+          headlineEl.textContent = payload.message || 'Invalid JSON payload';
+          if (SHOW_DEBUG) {
+            debugEl.textContent = 'error | ' + (payload.message || '');
+          }
+          return;
+        }
+
+        switch (layout) {
+          case 'hero':
+            headlineEl.textContent = payload.headline || '(no headline)';
+            if (payload.subtitle) {
+              subtitleEl.textContent = payload.subtitle;
+              subtitleEl.style.display = 'block';
+            }
+            break;
+          case 'promo':
+            if (payload.badge) {
+              badgeEl.textContent = payload.badge;
+              badgeEl.style.display = 'inline-block';
+            }
+            headlineEl.textContent = payload.headline || '(no headline)';
+            break;
+          case 'minimal':
+          default:
+            headlineEl.textContent = payload.headline || '(no headline)';
+            break;
+        }
+
+        if (payload.showCta) {
+          ctaEl.textContent = payload.ctaText || 'Learn more';
+          ctaEl.classList.add('visible');
+        }
+
+        if (SHOW_DEBUG) {
+          var raw = getDynamicRow() ? getDynamicRow()[LAYOUT_JSON_FIELD] : '';
+          var preview =
+            typeof raw === 'string' && raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
+          debugEl.textContent = 'layout=' + layout + ' | ' + preview;
+        } else {
+          debugEl.textContent = '';
+        }
+      }
+
+      function applyDynamicContent() {
+        var row = getDynamicRow();
+        var raw = row ? row[LAYOUT_JSON_FIELD] : undefined;
+        render(parseLayoutJson(raw));
+      }
+
+      function onCtaClick() {
+        Enabler.exit('MainExit');
+      }
+
+      function initAd() {
+        document.getElementById('cta').addEventListener('click', onCtaClick);
+        applyDynamicContent();
+      }
+
+      if (Enabler.isInitialized()) {
+        initAd();
+      } else {
+        Enabler.addEventListener('init', initAd);
+      }
+    </script>
+  </body>
+</html>
