@@ -18,13 +18,22 @@ Google does not support JSON as a feed **file format**; this POC uses a **Text**
 
 Use this as Studio **Remote file** (CSV) content source:
 
-**https://gist.githubusercontent.com/Wyfy0107/d22ca7e95a2dba74e65350ab111291f5/raw/feed-sample.csv**
+**https://raw.githubusercontent.com/Wyfy0107/studio-json-feed-poc/master/feed-sample.csv**
 
-Gist page: https://gist.github.com/Wyfy0107/d22ca7e95a2dba74e65350ab111291f5
+(Alternate: https://gist.githubusercontent.com/Wyfy0107/d22ca7e95a2dba74e65350ab111291f5/raw/feed-sample.csv)
 
-### Option B — Your own public Google Sheet (~1 min)
+### Option B — Google Sheet for Studio “Google Docs” source
 
-Smartly Drive **blocks** public / personal-Google sharing on the auto-created sheet. The sheet is shared **domain-wide for `@smartly.io`** ([link](https://docs.google.com/spreadsheets/d/1C8_Zb87gUfXXmZn0Gt7dgZLAG9AjWbg1Lii5zvbLXfQ/edit) — open while signed into a Smartly Google account). If you use a personal Gmail, Google shows *“Sorry, the file you have requested does not exist”* even though the file is real.
+**Sheet:** [Studio JSON Feed POC - LayoutJson](https://docs.google.com/spreadsheets/d/1C8_Zb87gUfXXmZn0Gt7dgZLAG9AjWbg1Lii5zvbLXfQ/edit)
+
+Studio does **not** use “anyone with the link”. Per [Google’s feed guide](https://support.google.com/richmedia/answer/3399836), the spreadsheet must be shared with:
+
+- `StudioDynamicCreative@system.gserviceaccount.com` (Viewer)
+- `studio-dynamic-creatives@google.com` (Viewer)
+
+Those accounts are on the sheet now, plus **Smartly domain** read (`@smartly.io`). Smartly policy still blocks public / personal-Gmail link sharing.
+
+In Studio, paste the URL from **Share → Copy link** (not a truncated browser bar URL). Pick tab **Sheet1**. Sheet must stay in **My Drive** (not a Shared drive).
 
 To get a **public** Sheet:
 
@@ -43,6 +52,7 @@ Local copy of the data is always in [feed-sample.csv](./feed-sample.csv).
 | `Reporting_Label` | Reporting label | Usually off |
 | `Active` | Active | — |
 | `LayoutJson` | **Text** | **ON** |
+| `Feed_Tagline` | **Text** | **ON** |
 
 Each `LayoutJson` cell is one-line JSON, for example:
 
@@ -50,14 +60,18 @@ Each `LayoutJson` cell is one-line JSON, for example:
 {"layout":"hero","headline":"Summer sale","subtitle":"Up to 50% off","theme":"dark","showCta":true,"ctaText":"Shop now"}
 ```
 
-Supported `layout` values in the template: `hero`, `promo`, `minimal`. Optional fields: `theme` (`dark` \| `light`), `badge`, `subtitle`, `showCta`, `ctaText`.
+Supported `layout` values in the template: `hero`, `promo`, `minimal`. Optional JSON fields: `theme`, `badge`, `subtitle`, `showCta`, `ctaText`, `imageUrl`.
+
+**`Feed_Tagline`** is a normal feed column (not in JSON). The template reads `dynamicContent.…[0].Feed_Tagline` and shows italic text under the headline block.
+
+**Published profile feed update:** add column in Sheet → open element → map new field → **Transform** → re-upload creative zip if HTML changed.
 
 ## Studio setup (your steps)
 
 1. **Profile → Manage Data** → New content → **Google Docs** → paste the Sheet URL.
 2. **Element properties**: map ID / Reporting label / Active; set `LayoutJson` to **Text**, toggle **Display ON** → **Transform** → save.
-3. **Generate Code (HTML5)** → note the element name (e.g. `MySheet_Sheet1`). If it is not `Dynamic_Feed`, edit `DYNAMIC_ELEMENT_NAME` at the top of the script in [index.html](./index.html) and re-zip.
-4. Upload [studio-json-feed-poc.zip](./studio-json-feed-poc.zip) (or zip `index.html` yourself). Add a **MainExit** exit in Studio if prompted.
+3. **Generate Code (HTML5)** — template is wired for profile **10965888** and element **`Studio_JSON_Feed_POC__LayoutJson_Sheet1`** (see `dynamicContent.…[0].LayoutJson` in [index.html](./index.html)).
+4. Upload [studio-json-feed-poc.zip](./studio-json-feed-poc.zip) (`index.html` + `backup.jpg`). In **Manage files**, set **`backup.jpg` → Use as backup image** for the HTML in-page asset (Studio requires one backup per in-page asset). Add a **MainExit** exit if prompted.
 5. **Dynamic preview**: cycle feed rows — you should see hero (dark + subtitle), promo (badge), and minimal (centered, no CTA). The green debug strip shows `layout=` and a snippet of the injected JSON when live data is used.
 
 ## Local sanity check

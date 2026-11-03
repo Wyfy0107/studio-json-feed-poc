@@ -1,4 +1,4 @@
-id,Reporting_Label,Active,LayoutJson
-row-hero-1,hero_variant,TRUE,"{""layout"":""hero"",""headline"":""Summer sale"",""subtitle"":""Up to 50% off"",""theme"":""dark"",""showCta"":true,""ctaText"":""Shop now""}"
-row-promo-1,promo_variant,TRUE,"{""layout"":""promo"",""badge"":""NEW"",""headline"":""Free shipping this week"",""theme"":""light"",""showCta"":true,""ctaText"":""Learn more""}"
-row-minimal-1,minimal_variant,TRUE,"{""layout"":""minimal"",""headline"":""One line only"",""theme"":""light"",""showCta"":false}"
+id,Reporting_Label,Active,LayoutJson,Feed_Tagline
+row-hero-1,hero_variant,TRUE,"{""layout"":""hero"",""headline"":""Summer sale"",""subtitle"":""Up to 50% off"",""theme"":""dark"",""showCta"":true,""ctaText"":""Shop now"",""imageUrl"":""https://www.gstatic.com/webp/gallery/1.jpg""}",Limited time only
+row-promo-1,promo_variant,TRUE,"{""layout"":""promo"",""badge"":""NEW"",""headline"":""Free shipping this week"",""theme"":""light"",""showCta"":true,""ctaText"":""Learn more"",""imageUrl"":""https://www.gstatic.com/webp/gallery/2.jpg""}",Use code SHIPFREE
+row-minimal-1,minimal_variant,TRUE,"{""layout"":""minimal"",""headline"":""One line only"",""theme"":""light"",""showCta"":false}",

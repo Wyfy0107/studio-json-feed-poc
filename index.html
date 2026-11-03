@@ -64,7 +64,24 @@
         font-size: 14px;
         line-height: 1.3;
         opacity: 0.9;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
+      }
+      #feed-tagline {
+        display: none;
+        font-size: 12px;
+        line-height: 1.3;
+        font-style: italic;
+        opacity: 0.85;
+        margin-bottom: 8px;
+      }
+      #feed-tagline.visible {
+        display: block;
+      }
+      .theme-dark #feed-tagline {
+        color: #a8dadc;
+      }
+      .theme-light #feed-tagline {
+        color: #555;
       }
       #cta {
         display: none;
@@ -110,6 +127,33 @@
       .layout-hero #headline {
         font-size: 26px;
       }
+      #content {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+      }
+      #ad.has-image #content {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+      }
+      #product-image {
+        display: none;
+        flex-shrink: 0;
+        width: 72px;
+        height: 72px;
+        object-fit: cover;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.15);
+      }
+      #product-image.visible {
+        display: block;
+      }
+      #text-block {
+        min-width: 0;
+        flex: 1;
+      }
     </style>
     <script type="text/javascript">
       var Enabler = window.Enabler || {
@@ -129,10 +173,21 @@
     <script src="https://s0.2mdn.net/ads/studio/Enabler.js"></script>
   </head>
   <body>
+    <noscript>
+      <a href="https://www.google.com" target="_blank">
+        <img src="backup.jpg" width="300" height="250" alt="" />
+      </a>
+    </noscript>
     <div id="ad" class="theme-light layout-minimal">
-      <span id="badge" class="badge" style="display: none"></span>
-      <h1 id="headline">Loading…</h1>
-      <p id="subtitle" style="display: none"></p>
+      <div id="content">
+        <img id="product-image" alt="" />
+        <div id="text-block">
+          <span id="badge" class="badge" style="display: none"></span>
+          <h1 id="headline">Loading…</h1>
+          <p id="subtitle" style="display: none"></p>
+          <p id="feed-tagline"></p>
+        </div>
+      </div>
       <button type="button" id="cta">Click</button>
       <div id="debug"></div>
     </div>
@@ -141,19 +196,19 @@
       /** Set false before production upload if you do not want the debug strip. */
       var SHOW_DEBUG = true;
 
-      /**
-       * Must match the Studio element name for your dynamic feed.
-       * Default matches CM360/Raptor "Dynamic_Feed"; replace after Generate Code if different.
-       */
-      var DYNAMIC_ELEMENT_NAME = 'Dynamic_Feed';
+      /** Profile 10965888 — element from Studio Generate Code */
+      var DYNAMIC_ELEMENT_NAME = 'Studio_JSON_Feed_POC__LayoutJson_Sheet1';
       var LAYOUT_JSON_FIELD = 'LayoutJson';
+      /** New feed column (Text, Display ON) — not inside LayoutJson */
+      var FEED_TAGLINE_FIELD = 'Feed_Tagline';
 
-      Enabler.setProfileId(0);
+      Enabler.setProfileId(10965888);
       var devDynamicContent = {};
       devDynamicContent[DYNAMIC_ELEMENT_NAME] = [{}];
       devDynamicContent[DYNAMIC_ELEMENT_NAME][0]._id = 0;
       devDynamicContent[DYNAMIC_ELEMENT_NAME][0].LayoutJson =
-        '{"layout":"hero","headline":"Dev preview headline","subtitle":"From devDynamicContent","theme":"dark","showCta":true,"ctaText":"Dev CTA"}';
+        '{"layout":"hero","headline":"Summer sale","subtitle":"Up to 50% off","theme":"dark","showCta":true,"ctaText":"Shop now","imageUrl":"https://www.gstatic.com/webp/gallery/1.jpg"}';
+      devDynamicContent[DYNAMIC_ELEMENT_NAME][0].Feed_Tagline = 'From feed column (dev)';
       Enabler.setDevDynamicContent(devDynamicContent);
 
       function getDynamicRow() {
@@ -196,20 +251,41 @@
         adEl.classList.add('layout-' + (layout || 'minimal'));
       }
 
-      function render(payload) {
+      function applyProductImage(adEl, imageEl, imageUrl) {
+        adEl.classList.remove('has-image');
+        imageEl.classList.remove('visible');
+        imageEl.removeAttribute('src');
+        if (!imageUrl || typeof imageUrl !== 'string') {
+          return;
+        }
+        var url = imageUrl.trim();
+        if (!/^https:\/\//i.test(url)) {
+          return;
+        }
+        imageEl.src = url;
+        imageEl.classList.add('visible');
+        adEl.classList.add('has-image');
+      }
+
+      function render(payload, feedTagline) {
         var adEl = document.getElementById('ad');
+        var imageEl = document.getElementById('product-image');
         var badgeEl = document.getElementById('badge');
         var headlineEl = document.getElementById('headline');
         var subtitleEl = document.getElementById('subtitle');
+        var feedTaglineEl = document.getElementById('feed-tagline');
         var ctaEl = document.getElementById('cta');
         var debugEl = document.getElementById('debug');
 
         var layout = payload.layout || 'minimal';
         setLayoutClass(adEl, layout);
         setTheme(adEl, payload.layout === 'error' ? 'error' : payload.theme || 'light');
+        applyProductImage(adEl, imageEl, payload.imageUrl);
 
         badgeEl.style.display = 'none';
         subtitleEl.style.display = 'none';
+        feedTaglineEl.classList.remove('visible');
+        feedTaglineEl.textContent = '';
         ctaEl.classList.remove('visible');
 
         if (layout === 'error') {
@@ -246,11 +322,17 @@
           ctaEl.classList.add('visible');
         }
 
+        if (feedTagline && String(feedTagline).trim()) {
+          feedTaglineEl.textContent = String(feedTagline).trim();
+          feedTaglineEl.classList.add('visible');
+        }
+
         if (SHOW_DEBUG) {
           var raw = getDynamicRow() ? getDynamicRow()[LAYOUT_JSON_FIELD] : '';
           var preview =
             typeof raw === 'string' && raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
-          debugEl.textContent = 'layout=' + layout + ' | ' + preview;
+          var tagPreview = feedTagline ? ' tagline=' + String(feedTagline).slice(0, 40) : '';
+          debugEl.textContent = 'layout=' + layout + tagPreview + ' | ' + preview;
         } else {
           debugEl.textContent = '';
         }
@@ -259,7 +341,8 @@
       function applyDynamicContent() {
         var row = getDynamicRow();
         var raw = row ? row[LAYOUT_JSON_FIELD] : undefined;
-        render(parseLayoutJson(raw));
+        var feedTagline = row ? row[FEED_TAGLINE_FIELD] : undefined;
+        render(parseLayoutJson(raw), feedTagline);
       }
 
       function onCtaClick() {
